@@ -1,5 +1,6 @@
 ﻿using FinanceAPI.Data;
 using FinanceAPI.Dtos.Stock;
+using FinanceAPI.Interfaces;
 using FinanceAPI.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +12,16 @@ namespace FinanceAPI.Controllers
     public class StockController : ControllerBase
     {
         private readonly ApplicationDBContext _context;
-        public StockController(ApplicationDBContext context)
+        private readonly IStockRepository _stockRepo;
+        public StockController(ApplicationDBContext context, IStockRepository stockRepo)
         {
+            _stockRepo = stockRepo;
             _context = context;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll() {
-            var stocks = await _context.Stocks.ToListAsync();
+            var stocks = await _stockRepo.GetAllAsync();
             var stocksDto =  stocks.Select(s => s.ToStockDto());
 
             return Ok(stocksDto);
@@ -26,7 +29,7 @@ namespace FinanceAPI.Controllers
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById([FromRoute] int id) {
-            var stock = await _context.Stocks.FindAsync(id);
+            var stock = await _stockRepo.GetByIdAsync(id);
 
             if(stock == null)
                 return NotFound();
@@ -38,8 +41,7 @@ namespace FinanceAPI.Controllers
         public async Task<IActionResult> Create([FromBody] CreateStockRequestDto stockDto)
         {
             var stockModel = stockDto.ToStockFromCreateDto();
-            await _context.Stocks.AddAsync(stockModel);
-            await _context.SaveChangesAsync();
+            await _stockRepo.CreateAsync(stockModel);
 
             return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, stockModel.ToStockDto());
         }
@@ -48,14 +50,11 @@ namespace FinanceAPI.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateStockRequestDto requestDto)
         {
-            var stockModel = await _context.Stocks.FirstOrDefaultAsync(stock => stock.Id == id);
+            var stockModel = await _stockRepo.UpdateAsync(id, requestDto);
 
             if (stockModel == null)
                 return NotFound();
 
-            // One way of mapping requestDto fields into our Entity
-            _context.Entry(stockModel).CurrentValues.SetValues(requestDto);
-            await _context.SaveChangesAsync();
 
             return Ok(stockModel.ToStockDto());
         }
@@ -64,13 +63,10 @@ namespace FinanceAPI.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var stockModel = await _context.Stocks.FirstOrDefaultAsync(stock => stock.Id == id);
+            var stockModel = await _stockRepo.DeleteAsync(id);
 
             if(stockModel == null)
                 return NotFound();
-
-            _context.Stocks.Remove(stockModel);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }
