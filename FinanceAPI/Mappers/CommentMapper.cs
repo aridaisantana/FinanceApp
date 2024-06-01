@@ -9,11 +9,18 @@ namespace FinanceAPI.Mappers
         {
             return new CommentDto
             {
-                Id = commentModel.Id,
                 Title = commentModel.Title,
                 Content = commentModel.Content,
-                CreatedOn = commentModel.CreatedOn,
-                StockId = commentModel.StockId,
+            };
+        }
+
+        public static Comment ToCommentFromRequestDto(this CreateCommentRequestDto commentRequestDto, int stockId)
+        {
+            return new Comment
+            {
+                Content = commentRequestDto.Content,
+                Title = commentRequestDto.Title,
+                StockId = stockId,
             };
         }
     }
