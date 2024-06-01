@@ -1,4 +1,6 @@
-﻿namespace FinanceAPI.Dtos.Stock
+﻿using FinanceAPI.Dtos.Comment;
+
+namespace FinanceAPI.Dtos.Stock
 {
     public class StockDto
     {
@@ -15,5 +17,7 @@
         public string Industry { get; set; } = string.Empty;
 
         public int MarketCap { get; set; }
+
+        public List <CommentDto> Comments { get; set; }
     }
 }
