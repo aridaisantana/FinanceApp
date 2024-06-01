@@ -48,5 +48,29 @@ namespace FinanceAPI.Controllers
             var commentModel = await _commentRepo.CreateAsync(commentDto.ToCommentFromRequestDto(stockId));
             return CreatedAtAction(nameof(GetById), new { id = commentModel.Id }, commentModel.ToCommentDto());
         }
+
+        [HttpPut]
+        [Route("{id}")]
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateCommentRequestDto commentDto)
+        {
+            var commentModel = await _commentRepo.UpdateAsync(id, commentDto);
+
+            if (commentModel == null)
+                return NotFound("Comment not found");
+
+            return Ok(commentModel.ToCommentDto());
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            var commentModel = await _commentRepo.DeleteAsync(id);
+
+            if (commentModel == null)
+                return NotFound("Comment does not exist");
+
+            return NoContent();
+        }
     }
 }

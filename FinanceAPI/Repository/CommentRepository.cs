@@ -1,4 +1,5 @@
 ﻿using FinanceAPI.Data;
+using FinanceAPI.Dtos.Comment;
 using FinanceAPI.Interfaces;
 using FinanceAPI.Models;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,31 @@ namespace FinanceAPI.Repository
             await _context.SaveChangesAsync();
             
             return comment;
+        }
+
+        public async Task<Comment?> UpdateAsync(int id, UpdateCommentRequestDto requestDto)
+        {
+            var commentModel = await _context.Comments.FirstOrDefaultAsync(c => c.Id == id);
+            
+            if (commentModel == null)
+                return null;
+
+            _context.Entry(commentModel).CurrentValues.SetValues(requestDto);
+            await _context.SaveChangesAsync();
+
+            return commentModel;
+        }
+
+        public async Task<Comment?> DeleteAsync(int id)
+        {
+            var commentModel = await _context.Comments.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (commentModel == null)
+                return null;
+
+            _context.Comments.Remove(commentModel);
+            await _context.SaveChangesAsync();
+            return commentModel;
         }
     }
 }
