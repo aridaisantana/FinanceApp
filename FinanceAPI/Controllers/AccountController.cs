@@ -4,6 +4,7 @@ using FinanceAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinanceAPI.Controllers
 {
@@ -12,11 +13,13 @@ namespace FinanceAPI.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
-        public AccountController(UserManager<AppUser> userManager, ITokenService tokenService)
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> sigInManager, ITokenService tokenService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
+            _signInManager = sigInManager;
         }
 
         [HttpPost("register")]
@@ -62,6 +65,34 @@ namespace FinanceAPI.Controllers
             {
                 return StatusCode(500, e);
             }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName.ToLower());
+
+            if (user == null)
+                return Unauthorized("Invalid Username!");
+
+           var signIn = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+
+            if (!signIn.Succeeded)
+            {
+                return Unauthorized("Username not found or password incorrect");
+            }
+
+            return Ok(
+                new NewUserDto
+                {
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Token = _tokenService.CreateToken(user)
+                }
+            );
         }
     }
 }

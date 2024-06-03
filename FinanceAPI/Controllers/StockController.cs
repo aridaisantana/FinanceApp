@@ -3,6 +3,7 @@ using FinanceAPI.Dtos.Stock;
 using FinanceAPI.Helpers;
 using FinanceAPI.Interfaces;
 using FinanceAPI.Mappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +22,7 @@ namespace FinanceAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] QueryObject query) {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
