@@ -1,6 +1,9 @@
 ﻿using FinanceAPI.Dtos.Comment;
+using FinanceAPI.Extensions;
 using FinanceAPI.Interfaces;
 using FinanceAPI.Mappers;
+using FinanceAPI.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinanceAPI.Controllers
@@ -11,11 +14,13 @@ namespace FinanceAPI.Controllers
     {
         private readonly ICommentRepository _commentRepo;
         private readonly IStockRepository _stockRepo;
+        private readonly UserManager<AppUser> _userManager;
 
-        public CommentController(ICommentRepository commentRepo, IStockRepository stockRepo)
+        public CommentController(ICommentRepository commentRepo, IStockRepository stockRepo, UserManager<AppUser> userManager)
         {
             _commentRepo = commentRepo;
             _stockRepo = stockRepo;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -54,7 +59,11 @@ namespace FinanceAPI.Controllers
             if (!await _stockRepo.StockExists(stockId))
                 return BadRequest("Stock does not exists");
 
+            var username = User.GetUsername();
+            var appUser = await _userManager.FindByNameAsync(username);
+
             var commentModel = await _commentRepo.CreateAsync(commentDto.ToCommentFromRequestDto(stockId));
+            commentModel.AppUserId = appUser.Id;
             return CreatedAtAction(nameof(GetById), new { id = commentModel.Id }, commentModel.ToCommentDto());
         }
 
