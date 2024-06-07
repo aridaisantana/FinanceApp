@@ -1,4 +1,4 @@
-Finance API
+Finance API build using .NET 8.0 framework
 
 -CRUD for Stocks and Comments.
 
